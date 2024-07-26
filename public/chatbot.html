@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot</title>
+    <style>
+        body  {
+            overflow: hidden;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #0c0c0c;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 500px; /* Altura fija para el contenedor del chat */
+            background-color: rgba(255, 255, 255, 0.9);
+            background-image: url('./assent/FTAPPGAME\ \(5\)\ \(1\).png'); /* Reemplaza con tu URL de imagen */
+            background-size: cover; /* Ajusta el tamaño de la imagen */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+             /* Evita que el contenido desborde */
+             
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+            position: relative;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto; /* Scroll vertical si el contenido es mayor */
+            padding: 100px;
+            max-height: calc(100% - 100px); /* Altura máxima para el chat-box */
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            background-color: #f9f9f9;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+
+        .input-container input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .input-container button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .input-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .button-container button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .button-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+            position: relative; /* Para posicionamiento relativo */
+        }
+
+        .user-message {
+            background-color: #cce5ff;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: #e8f0fe;
+            align-self: flex-start;
+        }
+
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .modal input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .modal button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .modal button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilos para el botón de compartir */
+        .share-btn {
+            position: absolute;
+            bottom: -40px; /* Ajuste para colocarlo debajo del mensaje inicial */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: none; /* Oculto por defecto */
+        }
+
+        .share-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilos para el menú de compartir */
+        .share-menu {
+            position: absolute;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 4px;
+            display: none; /* Oculto por defecto */
+            z-index: 10;
+            bottom: -80px; /* Ajuste de posición */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .share-menu a {
+            display: block;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 6px;
+            transition: background-color 0.3s;
+        }
+
+        .share-menu a:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+            <div class="message bot-message">
+                <p>Bienvenido al ChatBot de FTAPPGAME.</p>
+                <div class="share-btn" id="shareBtn" onclick="toggleShareMenu()">Compartir</div>
+                <div class="share-menu" id="shareMenu">
+                    <a href="#" onclick="shareOn('email')">Correo electrónico</a>
+                    <a href="#" onclick="shareOn('whatsapp')">WhatsApp</a>
+                    <a href="#" onclick="shareOn('facebook')">Facebook</a>
+                    <a href="#" onclick="shareOn('instagram')">Instagram</a>
+                </div>
+            </div>
+        </div>
+       
+        <div class="button-container">
+            <button onclick="openModal()">Crear Jugador</button>
+            <button onclick="shareNequi()">Recibir pago con Nequi</button>
+            <button onclick="eliminarJugador()">Eliminar Jugador</button>
+            <button onclick="toggleShareButton()">Compartir Jugador</button>
+            <button onclick="listaRegistrados()">Lista de Jugadores Registrados</button>
+            
+        </div>
+
+        <!-- Modal para crear jugador -->
+        <div class="modal" id="myModal">
+            <div class="modal-content">
+                <span onclick="closeModal()" class="close">&times;</span>
+                <h2>Crear Jugador</h2>
+                <input type="text" id="nombre" placeholder="Nombre">
+                <input type="text" id="apellido" placeholder="Apellido">
+                <input type="text" id="correo" placeholder="Correo Electrónico">
+                <button onclick="crearJugador()">Aceptar</button>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Escribe un mensaje...">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const modal = document.getElementById('myModal');
+        const shareBtn = document.getElementById('shareBtn');
+        const shareMenu = document.getElementById('shareMenu');
+        function shareNequi() {
+    let message = 'tu administrador necesita que hagas tu apuesta';
+    let link = 'https://clientes.nequi.com.co/recargas';
+
+    // Aquí puedes ajustar el mensaje y el enlace según sea necesario
+    let shareLink = `https://wa.me/?text=${encodeURIComponent(message + ' ' + link)}`;
+
+    // Abre la ventana para compartir en WhatsApp
+    window.open(shareLink);
+}
+
+
+        function openModal() {
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message !== '') {
+                displayMessage(message, 'user');
+                processMessage(message.toLowerCase());
+                userInput.value = '';
+            }
+        }
+
+        function displayMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', `${sender}-message`);
+            messageElement.innerHTML = `<p>${message}</p>`;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll automático
+        }
+
+        function displayResponse(response) {
+            const responseElement = document.createElement('div');
+            responseElement.classList.add('message', 'bot-message');
+            responseElement.innerHTML = `<p>${response}</p>`;
+            chatBox.appendChild(responseElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Scroll automático
+        }
+
+        function crearJugador() {
+            const nombre = document.getElementById('nombre').value.trim();
+            const apellido = document.getElementById('apellido').value.trim();
+            const correo = document.getElementById('correo').value.trim();
+
+            if (nombre === '' || apellido === '' || correo === '') {
+                alert('Por favor completa todos los campos.');
+                return;
+            }
+
+            closeModal();
+            displayResponse(`Jugador (${nombre}) creado exitosamente.`);
+        }
+
+        function eliminarJugador() {
+            displayResponse('Jugador eliminado correctamente de la mesa de juego.');
+        }
+
+        function listaRegistrados() {
+            displayResponse('Mostrando lista de jugadores registrados en la mesa de juego.');
+        }
+
+        function consultarJugador() {
+            displayResponse('Consultando jugador en la mesa de juego.');
+        }
+
+        function listaJugadores() {
+            displayResponse('Mostrando lista de jugadores en la mesa de juego.');
+        }
+
+        function processMessage(message) {
+            switch (message) {
+                case 'crear jugador':
+                    openModal();
+                    break;
+                case 'eliminar jugador':
+                    eliminarJugador();
+                    break;
+                case 'compartir jugador':
+                    toggleShareButton();
+                    break;
+                case 'lista de jugadores registrados':
+                    listaRegistrados();
+                    break;
+                case 'consultar jugador':
+                    consultarJugador();
+                    break;
+                case 'lista de jugadores':
+                    listaJugadores();
+                    break;
+                default:
+                    displayResponse('Lo siento, no entendí eso. Por favor, intenta nuevamente.');
+            }
+        }
+
+        function toggleShareButton() {
+            const shareBtn = document.getElementById('shareBtn');
+            shareBtn.style.display = (shareBtn.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function toggleShareMenu() {
+            const shareMenu = document.getElementById('shareMenu');
+            shareMenu.style.display = (shareMenu.style.display === 'block') ? 'none' : 'block';
+        }
+        function crearJugador() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+
+    if (nombre === '' || apellido === '' || correo === '') {
+        alert('Por favor completa todos los campos.');
+        return;
+    }
+
+    // Crear un objeto jugador
+    const jugador = {
+        nombre,
+        apellido,
+        correo
+    };
+
+    // Obtener los jugadores actuales del localStorage
+    let jugadores = JSON.parse(localStorage.getItem('jugadores')) || [];
+
+    // Agregar el nuevo jugador
+    jugadores.push(jugador);
+
+    // Guardar de nuevo en localStorage
+    localStorage.setItem('jugadores', JSON.stringify(jugadores));
+
+    closeModal();
+    displayResponse(`Jugador (${nombre}) creado exitosamente.`);
+}
+function listaRegistrados() {
+    let jugadores = JSON.parse(localStorage.getItem('jugadores')) || [];
+
+    if (jugadores.length === 0) {
+        displayResponse('No hay jugadores registrados aún.');
+        return;
+    }
+
+    let response = 'Lista de jugadores registrados:<br>';
+    jugadores.forEach((jugador, index) => {
+        response += `${index + 1}. Nombre: ${jugador.nombre} ${jugador.apellido}, Correo: ${jugador.correo}<br>`;
+    });
+
+    displayResponse(response);
+}
+
+let jugadores = []; // Array para almacenar los jugadores
+
+function agregarJugador(nombre, apellido, correo) {
+    let jugador = { nombre, apellido, correo };
+    jugadores.push(jugador);
+    actualizarListaJugadores();
+}
+// Función para enviar mensaje (puedes mantenerla según tus necesidades)
+function sendMessage() {
+    const message = userInput.value.trim();
+    if (message !== '') {
+        displayMessage(message, 'user');
+        processMessage(message.toLowerCase());
+        userInput.value = '';
+    }
+}
+function obtenerJugadores() {
+    return jugadores;
+}
+
+function actualizarListaJugadores() {
+    let listaJugadores = document.getElementById('lista-jugadores');
+    listaJugadores.innerHTML = ''; // Limpiar la lista antes de actualizar
+
+    jugadores.forEach((jugador, index) => {
+        let jugadorItem = document.createElement('li');
+        jugadorItem.textContent = `${index + 1}. ${jugador.nombre} ${jugador.apellido} - ${jugador.correo}`;
+        listaJugadores.appendChild(jugadorItem);
+    });
+}
+
+        function shareOn(platform) {
+            let message = 'Compartiendo mensaje: Bienvenido al ChatBot de FTAPPGAME.';
+            switch (platform) {
+                case 'email':
+                    window.open(`mailto:?subject=ChatBot%20Message&body=${encodeURIComponent('https://ft-app33.onrender.com/')}`);
+                    break;
+                case 'whatsapp':
+                    window.open(`https://wa.me/?text=${encodeURIComponent('https://ft-app33.onrender.com/')}`);
+                    break;
+                case 'facebook':
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://ft-app33.onrender.com/')}`);
+                    break;
+                case 'instagram':
+                    window.open(`https://www.instagram.com/?message=${encodeURIComponent('https://ft-app33.onrender.com/')}`);
+                    break;
+                default:
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
